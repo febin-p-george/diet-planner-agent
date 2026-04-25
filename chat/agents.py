@@ -75,7 +75,7 @@ db_url = os.environ.get("DATABASE_URL")
 
 if db_url:
     # Render gives a postgres:// URL but SQLAlchemy needs postgresql://
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
     session_service = DatabaseSessionService(db_url)
 else:
     # Local development fallback
