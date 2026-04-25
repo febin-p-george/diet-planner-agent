@@ -2,7 +2,7 @@ import os
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService  # SQLite won't work on Vercel
+from google.adk.sessions import InMemorySessionService, DatabaseSessionService  # SQLite won't work on Vercel
 from google.adk.tools import AgentTool, google_search
 from google.genai import types
 
@@ -70,7 +70,16 @@ coordination_agent = Agent(
 # InMemorySessionService: sessions live as long as the server process does.
 # Fine for demos. For production, switch to DatabaseSessionService with a
 # hosted Postgres URL (e.g. Neon or Supabase free tier).
-session_service = InMemorySessionService()
+# Use persistent DB if DATABASE_URL is set, otherwise fall back to in-memory
+db_url = os.environ.get("DATABASE_URL")
+
+if db_url:
+    # Render gives a postgres:// URL but SQLAlchemy needs postgresql://
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    session_service = DatabaseSessionService(db_url)
+else:
+    # Local development fallback
+    session_service = InMemorySessionService()
 
 runner = Runner(
     agent=coordination_agent,
